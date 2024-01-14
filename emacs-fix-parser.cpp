@@ -1,12 +1,17 @@
 #include <quickfix/Message.h>
 #include <quickfix/FieldMap.h>
 #include <emacs-module.h>
-#include <unordered_map>
+#include <vector>
 #include <iostream>
 #include <string>
 #include <stdexcept>
 
 int plugin_is_GPL_compatible;
+
+struct TagValue {
+    int tag;
+    std::string value;
+};
 
 static emacs_value Fparse_fix_message(emacs_env *env, ptrdiff_t nargs, emacs_value args[], void *data) {
     try {
@@ -23,10 +28,10 @@ static emacs_value Fparse_fix_message(emacs_env *env, ptrdiff_t nargs, emacs_val
         fixMessage.setString(fixMessageStr);
 
         // Logging the number of fields
-        std::unordered_map<int, std::string> parsedData;
+        std::vector<TagValue> tags;
         int fieldCount = 0;
         for (FIX::FieldMap::iterator field = fixMessage.begin(); field != fixMessage.end(); ++field) {
-            parsedData[field->getTag()] = field->getString();
+            tags.push_back(TagValue{field->getTag(), field->getString()});
             fieldCount++;
             // Logging each field
             std::cerr << "Field Tag: " << field->getTag() << ", Value: " << field->getString() << std::endl;
@@ -35,15 +40,23 @@ static emacs_value Fparse_fix_message(emacs_env *env, ptrdiff_t nargs, emacs_val
         std::cerr << "Total number of fields: " << fieldCount << std::endl;
 
         emacs_value Qlist = env->intern(env, "nil");
-        for (const auto& field : parsedData) {
-            emacs_value Qtag = env->make_integer(env, field.first);
-            emacs_value Qvalue = env->make_string(env, field.second.c_str(), field.second.length());
+        for (const auto& tag : tags) {
+            emacs_value Qtag = env->make_integer(env, tag.tag);
+            emacs_value Qvalue = env->make_string(env, tag.value.c_str(), tag.value.length());
 
-            emacs_value cons_args[] = { Qtag, Qvalue, Qlist };
+            // Create an array for the tag-value pair
+            emacs_value pair_args[] = { Qtag, Qvalue };
+            emacs_value Qpair = env->funcall(env, env->intern(env, "cons"), 2, pair_args);
+
+            // Create an array for the cons arguments
+            emacs_value cons_args[] = { Qpair, Qlist };
             Qlist = env->funcall(env, env->intern(env, "cons"), 2, cons_args);
             // Logging the Emacs alist construction
-            std::cerr << "Emacs Alist - Tag: " << field.first << ", Value: " << field.second << std::endl;
+            std::cerr << "Emacs Alist - Tag: " << tag.tag << ", Value: " << tag.value << std::endl;
         }
+
+        // Reverse emacs list to maintain order
+        Qlist = env->funcall(env, env->intern(env, "nreverse"), 1, &Qlist);
 
         return Qlist;
     } catch (const std::exception& e) {
