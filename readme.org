@@ -40,5 +40,5 @@ Example of decoding a CME Option
     - Paste your FIX message - making sure to use geuine SOH (ASCII 001) characters as delimiters
     - ~C-c C-c~ to decode
 
-* TODO
+* Know Issues
     - Sometimes message length and checksum need modifying to work (header truncation?).  You can swap out the values for the expected ones in the Emacs exception.
