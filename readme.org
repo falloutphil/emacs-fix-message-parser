@@ -22,7 +22,7 @@ Example of decoding a CME Option
         make
         sudo make install
       #+END_SRC
-* Emacs
+** Emacs
     - Install Emacs (or build latest from source): ~sudo apt-get install emacs~
     - Optional Install org-pretty-table
 ** G++
