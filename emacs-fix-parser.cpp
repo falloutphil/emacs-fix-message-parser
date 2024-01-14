@@ -73,6 +73,11 @@ static emacs_value Fparse_fix_message(emacs_env *env, ptrdiff_t nargs, emacs_val
         Qlist = env->funcall(env, env->intern(env, "nreverse"), 1, &Qlist);
 
         return Qlist;
+    } catch (const FIX::InvalidMessage& e) {
+        emacs_value Qerror_symbol = env->intern(env, "error");
+        emacs_value Qerror_message = env->make_string(env, e.what(), strlen(e.what()));
+        env->non_local_exit_signal(env, Qerror_symbol, Qerror_message);
+        return env->intern(env, "nil");
     } catch (const std::exception& e) {
         emacs_value Qerror_symbol = env->intern(env, "error");
         emacs_value Qerror_message = env->make_string(env, e.what(), strlen(e.what()));
