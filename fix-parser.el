@@ -23,10 +23,6 @@
       (insert "|-\n")
       ;; Finalize the table to apply proper formatting.
       (org-table-align)
-      ;; Apply header formatting.
-      (goto-char (point-min))
-      (let ((header-end (search-forward "|-" nil t)))
-        (put-text-property (point-min) header-end 'face '(:background "yellow" :weight bold)))
       (read-only-mode 1))  ; Make the buffer read-only.
     (display-buffer output-buffer-name)))
 
