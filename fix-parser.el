@@ -1,3 +1,5 @@
+(module-load "/home/phil/git/emacs-fix-message-parser/emacs-fix-parser.so")
+
 (defun parse-and-display-fix-message ()
   "Parse the FIX message in the current buffer and display results."
   (interactive)
@@ -13,8 +15,9 @@
       (with-current-buffer (get-buffer-create output-buffer-name)
         (dolist (item parsed)
           (let ((tag (car item))
-                (value (cdr item)))
-            (insert (format "Tag: %s, Value: %s\n" tag value))))
+                (tag-data (cdr item)))
+            (insert (format "Tag: %s, Name: %s, Value: %s\n"
+                            tag (car tag-data) (cdr tag-data)))))
         (read-only-mode 1)))
 
     ;; Display the output buffer
