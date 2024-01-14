@@ -1,3 +1,4 @@
+#include <quickfix/DataDictionary.h>
 #include <quickfix/Message.h>
 #include <quickfix/FieldMap.h>
 #include <emacs-module.h>
@@ -6,10 +7,13 @@
 #include <string>
 #include <stdexcept>
 
+FIX::DataDictionary dictionary("/usr/local/share/quickfix/FIX42.xml");
+
 int plugin_is_GPL_compatible;
 
 struct TagValue {
     int tag;
+    std::string tagName;
     std::string value;
 };
 
@@ -31,10 +35,15 @@ static emacs_value Fparse_fix_message(emacs_env *env, ptrdiff_t nargs, emacs_val
         std::vector<TagValue> tags;
         int fieldCount = 0;
         for (FIX::FieldMap::iterator field = fixMessage.begin(); field != fixMessage.end(); ++field) {
-            tags.push_back(TagValue{field->getTag(), field->getString()});
+            int tag = field->getTag();
+            std::string value = field->getString();
+            std::string tagName;
+            dictionary.getFieldName(tag, tagName);
+
+            tags.push_back(TagValue{tag, tagName, value});
             fieldCount++;
             // Logging each field
-            std::cerr << "Field Tag: " << field->getTag() << ", Value: " << field->getString() << std::endl;
+            std::cerr << "Field Tag: " << tag << ", Tag Name: " << tagName << ", Value: " << value << std::endl;
         }
 
         std::cerr << "Total number of fields: " << fieldCount << std::endl;
@@ -42,17 +51,22 @@ static emacs_value Fparse_fix_message(emacs_env *env, ptrdiff_t nargs, emacs_val
         emacs_value Qlist = env->intern(env, "nil");
         for (const auto& tag : tags) {
             emacs_value Qtag = env->make_integer(env, tag.tag);
+            emacs_value QtagName = env->make_string(env, tag.tagName.c_str(), tag.tagName.length());
             emacs_value Qvalue = env->make_string(env, tag.value.c_str(), tag.value.length());
 
+            // Create an array for the name-value pair
+            emacs_value value_pair_args[] = { QtagName, Qvalue };
+            emacs_value QvaluePair = env->funcall(env, env->intern(env, "cons"), 2, value_pair_args);
+
             // Create an array for the tag-value pair
-            emacs_value pair_args[] = { Qtag, Qvalue };
-            emacs_value Qpair = env->funcall(env, env->intern(env, "cons"), 2, pair_args);
+            emacs_value kv_pair_args[] = { Qtag, QvaluePair };
+            emacs_value QkvPair = env->funcall(env, env->intern(env, "cons"), 2, kv_pair_args);
 
             // Create an array for the cons arguments
-            emacs_value cons_args[] = { Qpair, Qlist };
+            emacs_value cons_args[] = { QkvPair, Qlist };
             Qlist = env->funcall(env, env->intern(env, "cons"), 2, cons_args);
             // Logging the Emacs alist construction
-            std::cerr << "Emacs Alist - Tag: " << tag.tag << ", Value: " << tag.value << std::endl;
+            std::cerr << "Emacs Alist - Tag: " << tag.tag << ", Tag Name: " << tag.tagName << ", Value: " << tag.value << std::endl;
         }
 
         // Reverse emacs list to maintain order
