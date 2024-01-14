@@ -1,0 +1,34 @@
+#+TITLE: Emacs FIX Decoder
+
+* Introduction
+C++ wrapper around QuickFix to allow parsing of FIX messages through an Emacs interactive command.
+
+* Preview
+Example of decoding a CME Option
+
+[[./emacs-fix-option.png]]
+
+
+* Installing Necessary Tools
+** QuickFIX Library
+    - Install dependencies: ~sudo apt-get install libxml2-dev libssl-dev~
+    - Download the latest QuickFIX source: http://www.quickfixengine.org/
+    - Compile and install QuickFIX:
+      #+BEGIN_SRC sh
+        tar -zxvf quickfix-x.y.z.tar.gz
+        cd quickfix-x.y.z
+        ./bootstrap
+        ./configure
+        make
+        sudo make install
+      #+END_SRC
+* Emacs
+    - Install Emacs (or build latest from source): ~sudo apt-get install emacs~
+    - Optional Install org-pretty-table
+** G++
+    - Install G++: ~sudo apt-get install g++~
+
+* Grab Some Example Messages
+    - https://fixsim.com/sample-fix-messages
+    - https://www.cmegroup.com/confluence/display/EPICSANDBOX/CME+STP+FIX+-+Samples
+ 
