@@ -37,6 +37,7 @@ Example of decoding a CME Option
     - https://www.cmegroup.com/confluence/display/EPICSANDBOX/CME+STP+FIX+-+Samples
  
 * Decode Them!
+    - Note you may need to set ~LD_LIBRARY_PATH~ to the directory of the ~so~ output above
     - Open ~fix-parsel.el~ in Emacs
     - Change the ~module-load~ to match the build of your local clone - the ~so~ file above
     - ~M-x eval-buffer~
