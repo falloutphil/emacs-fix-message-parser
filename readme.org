@@ -28,13 +28,17 @@ Example of decoding a CME Option
 ** G++
     - Install G++: ~sudo apt-get install g++~
 
+* Building Source
+    - As easy as typing ~./build.sh~
+    - This will produce an ~so~ library you will reference below
+
 * Grab Some Example Messages
     - https://fixsim.com/sample-fix-messages
     - https://www.cmegroup.com/confluence/display/EPICSANDBOX/CME+STP+FIX+-+Samples
  
 * Decode Them!
     - Open ~fix-parsel.el~ in Emacs
-    - Change the ~module-load~ to match your local clone
+    - Change the ~module-load~ to match the build of your local clone - the ~so~ file above
     - ~M-x eval-buffer~
     - ~M-x setup-fix-message-parsing-buffer~
     - Paste your FIX message - making sure to use geuine SOH (ASCII 001) characters as delimiters
