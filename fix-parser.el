@@ -1,24 +1,31 @@
 (module-load "/home/phil/git/emacs-fix-message-parser/emacs-fix-parser.so")
 
 (defun parse-and-display-fix-message ()
-  "Parse the FIX message in the current buffer and display results."
+  "Parse the FIX message in the current buffer and display results in a table."
   (interactive)
   (let ((fix-message (buffer-string))
         (output-buffer-name "*FIX Message Output*"))
     ;; Clear the output buffer
     (with-current-buffer (get-buffer-create output-buffer-name)
-      (read-only-mode 0)
-      (erase-buffer))
-
-    ;; Parse and format the FIX message
-    (let ((parsed (parse-fix-message fix-message)))
-      (with-current-buffer (get-buffer-create output-buffer-name)
+      (read-only-mode 0) ; Turn off readonly
+      (erase-buffer)
+      (org-mode)  ; Enable org-mode to use org-table features.
+      ;; Insert the table header with formatting.
+      (insert "| Tag | Name | Value |\n")
+      (insert "|-----+------+-------|\n")  ; Separator for header.
+      (let ((parsed (parse-fix-message fix-message)))
         (dolist (item parsed)
           (let ((tag (car item))
                 (tag-data (cdr item)))
-            (insert (format "Tag: %s, Name: %s, Value: %s\n"
-                            tag (car tag-data) (cdr tag-data)))))
-        (read-only-mode 1)))
+            (insert (format "| %s | %s | %s |\n" tag (car tag-data) (cdr tag-data))))))
+
+      ;; Apply styling to the header.
+      (goto-char (point-min))
+      (while (re-search-forward "^|-" nil t) (org-table-next-row))
+      (org-table-insert-hline t)
+      (add-text-properties (point-min) (point-at-eol)
+                           '(face (:background "yellow" :weight bold))))
+    (read-only-mode 1) ; Make the output buffer read-only.
 
     ;; Display the output buffer
     (display-buffer output-buffer-name)))
