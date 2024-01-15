@@ -1,7 +1,7 @@
 #+TITLE: Emacs FIX Decoder
 
 * Introduction
-C++ wrapper around QuickFix to allow parsing of FIX messages through an Emacs interactive command.
+C++ wrapper around QuickFix to allow parsing of FIX messages through an Emacs interactive command.  It uses Emacs module support feature to load in a C++ API which is used for decoding.
 
 * Preview
 Example of decoding a CME Option
