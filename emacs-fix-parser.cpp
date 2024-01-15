@@ -11,12 +11,6 @@ FIX::DataDictionary dictionary("/usr/local/share/quickfix/FIX42.xml");
 
 int plugin_is_GPL_compatible;
 
-struct TagValue {
-    int tag;
-    std::string tagName;
-    std::string value;
-};
-
 static emacs_value Fparse_fix_message(emacs_env *env, ptrdiff_t nargs, emacs_value args[], void *data) {
     try {
         // Extract the FIX message string from Emacs argument
@@ -32,27 +26,17 @@ static emacs_value Fparse_fix_message(emacs_env *env, ptrdiff_t nargs, emacs_val
         fixMessage.setString(fixMessageStr);
 
         // Logging the number of fields
-        std::vector<TagValue> tags;
         int fieldCount = 0;
+        emacs_value Qlist = env->intern(env, "nil"); // empty list to store result
         for (FIX::FieldMap::iterator field = fixMessage.begin(); field != fixMessage.end(); ++field) {
             int tag = field->getTag();
             std::string value = field->getString();
             std::string tagName;
             dictionary.getFieldName(tag, tagName);
 
-            tags.push_back(TagValue{tag, tagName, value});
-            fieldCount++;
-            // Logging each field
-            std::cerr << "Field Tag: " << tag << ", Tag Name: " << tagName << ", Value: " << value << std::endl;
-        }
-
-        std::cerr << "Total number of fields: " << fieldCount << std::endl;
-
-        emacs_value Qlist = env->intern(env, "nil");
-        for (const auto& tag : tags) {
-            emacs_value Qtag = env->make_integer(env, tag.tag);
-            emacs_value QtagName = env->make_string(env, tag.tagName.c_str(), tag.tagName.length());
-            emacs_value Qvalue = env->make_string(env, tag.value.c_str(), tag.value.length());
+            emacs_value Qtag = env->make_integer(env, tag);
+            emacs_value QtagName = env->make_string(env, tagName.c_str(), tagName.length());
+            emacs_value Qvalue = env->make_string(env, value.c_str(), value.length());
 
             // Create an array for the name-value pair
             emacs_value value_pair_args[] = { QtagName, Qvalue };
@@ -65,9 +49,12 @@ static emacs_value Fparse_fix_message(emacs_env *env, ptrdiff_t nargs, emacs_val
             // Create an array for the cons arguments
             emacs_value cons_args[] = { QkvPair, Qlist };
             Qlist = env->funcall(env, env->intern(env, "cons"), 2, cons_args);
-            // Logging the Emacs alist construction
-            std::cerr << "Emacs Alist - Tag: " << tag.tag << ", Tag Name: " << tag.tagName << ", Value: " << tag.value << std::endl;
+
+            fieldCount++;
+            // Logging each field
+            std::cerr << "Field Tag: " << tag << ", Tag Name: " << tagName << ", Value: " << value << std::endl;
         }
+        std::cerr << "Total number of fields: " << fieldCount << std::endl;
 
         // Reverse emacs list to maintain order
         Qlist = env->funcall(env, env->intern(env, "nreverse"), 1, &Qlist);
@@ -77,12 +64,12 @@ static emacs_value Fparse_fix_message(emacs_env *env, ptrdiff_t nargs, emacs_val
         emacs_value Qerror_symbol = env->intern(env, "error");
         emacs_value Qerror_message = env->make_string(env, e.what(), strlen(e.what()));
         env->non_local_exit_signal(env, Qerror_symbol, Qerror_message);
-        return env->intern(env, "nil");
+        return env->intern(env, "nil"); // empty list
     } catch (const std::exception& e) {
         emacs_value Qerror_symbol = env->intern(env, "error");
         emacs_value Qerror_message = env->make_string(env, e.what(), strlen(e.what()));
         env->non_local_exit_signal(env, Qerror_symbol, Qerror_message);
-        return env->intern(env, "nil");
+        return env->intern(env, "nil"); // empty list
     }
 }
 
