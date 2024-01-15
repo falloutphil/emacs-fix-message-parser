@@ -2,7 +2,6 @@
 #include <quickfix/Message.h>
 #include <quickfix/FieldMap.h>
 #include <emacs-module.h>
-#include <vector>
 #include <iostream>
 #include <string>
 #include <stdexcept>
